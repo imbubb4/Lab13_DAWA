@@ -2,51 +2,40 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import { FaGoogle, FaGithub } from "react-icons/fa";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleCredentialsSignIn = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-      callbackUrl: "/dashboard",
-    });
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    setLoading(false);
+      const data = await res.json();
 
-    if (result?.error) {
-      setError(result.error);
-      return;
+      if (!res.ok) {
+        setError(data.message || "Error al registrar");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/signin");
+    } catch {
+      setError("Error inesperado");
+      setLoading(false);
     }
-
-    if (result?.ok) {
-      router.push("/dashboard");
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    await signIn("google", { callbackUrl: "/dashboard" });
-  };
-
-  const handleGithubSignIn = async () => {
-    setError(null);
-    await signIn("github", { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -54,10 +43,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md px-4">
         <div className="bg-white/90 border border-slate-200 rounded-2xl shadow-lg px-8 py-10">
           <h1 className="text-2xl font-semibold text-slate-900 text-center">
-            Bienvenido de nuevo
+            Crear cuenta
           </h1>
           <p className="mt-1 mb-6 text-sm text-slate-500 text-center">
-            Inicia sesión para acceder a tu panel.
+            Regístrate para empezar a usar la aplicación.
           </p>
 
           {error && (
@@ -66,16 +55,36 @@ export default function LoginPage() {
             </p>
           )}
 
-          <form onSubmit={handleCredentialsSignIn} className="space-y-4 mb-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
-                htmlFor="login-email"
+                htmlFor="name"
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
+                Nombre
+              </label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Tu nombre"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                value={name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setName(e.target.value)
+                }
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="email"
                 className="block text-sm font-medium text-slate-700 mb-1"
               >
                 Email
               </label>
               <input
-                id="login-email"
+                id="email"
                 type="email"
                 placeholder="tucorreo@ejemplo.com"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
@@ -89,13 +98,13 @@ export default function LoginPage() {
 
             <div>
               <label
-                htmlFor="login-password"
+                htmlFor="password"
                 className="block text-sm font-medium text-slate-700 mb-1"
               >
                 Contraseña
               </label>
               <input
-                id="login-password"
+                id="password"
                 type="password"
                 placeholder="********"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
@@ -112,44 +121,18 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 text-white text-sm font-medium py-2.5 px-4 rounded-lg hover:bg-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Ingresando..." : "Iniciar con correo"}
+              {loading ? "Registrando..." : "Registrarse"}
             </button>
           </form>
 
-          <div className="flex items-center gap-2 mb-4">
-            <span className="h-px flex-1 bg-slate-200" />
-            <span className="text-[11px] uppercase tracking-wide text-slate-400">
-              o continúa con
-            </span>
-            <span className="h-px flex-1 bg-slate-200" />
-          </div>
-
-          <div className="flex gap-3 mb-4">
-            <button
-              onClick={handleGoogleSignIn}
-              className="flex-1 inline-flex items-center justify-center gap-2 border border-slate-300 text-slate-800 text-xs font-medium py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              <FaGoogle className="text-sm" />
-              Google
-            </button>
-
-            <button
-              onClick={handleGithubSignIn}
-              className="flex-1 inline-flex items-center justify-center gap-2 border border-slate-300 text-slate-800 text-xs font-medium py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              <FaGithub className="text-sm" />
-              GitHub
-            </button>
-          </div>
-
-          <p className="mt-2 text-xs text-center text-slate-500">
-            ¿No tienes cuenta?{" "}
+          <p className="mt-4 text-xs text-center text-slate-500">
+            ¿Ya tienes cuenta?{" "}
             <button
               type="button"
-              onClick={() => router.push("/register")}
+              onClick={() => router.push("/signin")}
               className="text-slate-900 font-medium hover:underline"
             >
-              Regístrate
+              Inicia sesión
             </button>
           </p>
         </div>

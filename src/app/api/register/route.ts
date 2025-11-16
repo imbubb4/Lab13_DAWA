@@ -1,20 +1,25 @@
-// app/api/register/route.ts
+import { NextResponse } from "next/server";
+import { createUser } from "@/lib/userStore";
 
-import { registerUser } from '@/lib/userService';
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { name, email, password } = await req.json();
+    const body = await request.json();
+    const { name, email, password } = body;
 
     if (!name || !email || !password) {
-      return new Response(JSON.stringify({ message: 'Missing fields' }), { status: 400 });
+      return NextResponse.json(
+        { message: "Nombre, email y contraseña son obligatorios" },
+        { status: 400 }
+      );
     }
 
-    // Llama a la lógica de registro (que usa bcrypt)
-    await registerUser(name, email, password);
+    await createUser(name, email, password);
 
-    return new Response(JSON.stringify({ message: 'User registered successfully' }), { status: 200 });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ message: error.message || 'Internal server error' }), { status: 500 });
+    return NextResponse.json({ message: "Usuario registrado correctamente" }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json(
+      { message: err.message || "Error al registrar usuario" },
+      { status: 400 }
+    );
   }
 }
