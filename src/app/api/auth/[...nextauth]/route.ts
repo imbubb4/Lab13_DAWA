@@ -9,16 +9,7 @@ export const authOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-            // Forzar que Google muestre el selector de cuenta cada vez
-            // Esto hace que Google pida seleccionar cuenta (útil si hay varias)
-            authorization: {
-                params: {
-                    prompt: 'select_account',
-                    access_type: 'offline',
-                    response_type: 'code'
-                }
-            }
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
         }),
         CredentialsProvider({
             name: 'Credentials',
@@ -42,7 +33,7 @@ export const authOptions = {
         }),
         GithubProvider({
             clientId: process.env.GITHUB_CLIENT_ID as string,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET as string
         }),
     ],
 };
